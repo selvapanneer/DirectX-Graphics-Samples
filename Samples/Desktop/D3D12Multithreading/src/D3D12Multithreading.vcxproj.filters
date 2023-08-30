@@ -54,6 +54,9 @@
     <ClInclude Include="Win32Application.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
+    <ClInclude Include="ScreenGrab12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -76,6 +79,9 @@
     </ClCompile>
     <ClCompile Include="Win32Application.cpp">
       <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenGrab12.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

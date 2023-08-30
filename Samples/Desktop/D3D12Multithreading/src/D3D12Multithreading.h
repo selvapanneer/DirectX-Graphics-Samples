@@ -78,7 +78,7 @@ private:
     CD3DX12_VIEWPORT m_viewport;
     CD3DX12_RECT m_scissorRect;
     ComPtr<IDXGISwapChain3> m_swapChain;
-    ComPtr<ID3D12Device> m_device;
+    ComPtr<ID3D12Device4> m_device;
     ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
     ComPtr<ID3D12Resource> m_depthStencil;
     ComPtr<ID3D12CommandAllocator> m_commandAllocator;
@@ -135,7 +135,7 @@ private:
     ThreadParameter m_threadParameters[NumContexts];
 
     void WorkerThread(int threadIndex);
-    void SetCommonPipelineState(ID3D12GraphicsCommandList* pCommandList);
+    void SetCommonPipelineState(ID3D12GraphicsCommandList1* pCommandList);
 
     void LoadPipeline();
     void LoadAssets();

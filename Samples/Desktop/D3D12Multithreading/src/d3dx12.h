@@ -1695,7 +1695,7 @@ inline void D3D12DecomposeSubresource( UINT Subresource, UINT MipLevels, UINT Ar
 
 //------------------------------------------------------------------------------------------------
 inline UINT8 D3D12GetFormatPlaneCount(
-    _In_ ID3D12Device* pDevice,
+    _In_ ID3D12Device4* pDevice,
     DXGI_FORMAT Format
     ) noexcept
 {
@@ -1798,9 +1798,9 @@ struct CD3DX12_RESOURCE_DESC : public D3D12_RESOURCE_DESC
     { return (Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D ? DepthOrArraySize : 1); }
     inline UINT16 ArraySize() const noexcept
     { return (Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE3D ? DepthOrArraySize : 1); }
-    inline UINT8 PlaneCount(_In_ ID3D12Device* pDevice) const noexcept
+    inline UINT8 PlaneCount(_In_ ID3D12Device4* pDevice) const noexcept
     { return D3D12GetFormatPlaneCount(pDevice, Format); }
-    inline UINT Subresources(_In_ ID3D12Device* pDevice) const noexcept
+    inline UINT Subresources(_In_ ID3D12Device4* pDevice) const noexcept
     { return MipLevels * ArraySize() * PlaneCount(pDevice); }
     inline UINT CalcSubresource(UINT MipSlice, UINT ArraySlice, UINT PlaneSlice) noexcept
     { return D3D12CalcSubresource(MipSlice, ArraySlice, PlaneSlice, MipLevels, ArraySize()); }
@@ -1923,9 +1923,9 @@ struct CD3DX12_RESOURCE_DESC1 : public D3D12_RESOURCE_DESC1
     { return (Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D ? DepthOrArraySize : 1); }
     inline UINT16 ArraySize() const noexcept
     { return (Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE3D ? DepthOrArraySize : 1); }
-    inline UINT8 PlaneCount(_In_ ID3D12Device* pDevice) const noexcept
+    inline UINT8 PlaneCount(_In_ ID3D12Device4* pDevice) const noexcept
     { return D3D12GetFormatPlaneCount(pDevice, Format); }
-    inline UINT Subresources(_In_ ID3D12Device* pDevice) const noexcept
+    inline UINT Subresources(_In_ ID3D12Device4* pDevice) const noexcept
     { return MipLevels * ArraySize() * PlaneCount(pDevice); }
     inline UINT CalcSubresource(UINT MipSlice, UINT ArraySlice, UINT PlaneSlice) noexcept
     { return D3D12CalcSubresource(MipSlice, ArraySlice, PlaneSlice, MipLevels, ArraySize()); }
@@ -2029,8 +2029,8 @@ inline UINT64 GetRequiredIntermediateSize(
     auto Desc = pDestinationResource->GetDesc();
     UINT64 RequiredSize = 0;
 
-    ID3D12Device* pDevice = nullptr;
-    pDestinationResource->GetDevice(IID_ID3D12Device, reinterpret_cast<void**>(&pDevice));
+    ID3D12Device4* pDevice = nullptr;
+    pDestinationResource->GetDevice(IID_ID3D12Device4, reinterpret_cast<void**>(&pDevice));
     pDevice->GetCopyableFootprints(&Desc, FirstSubresource, NumSubresources, 0, nullptr, nullptr, nullptr, &RequiredSize);
     pDevice->Release();
 
@@ -2040,7 +2040,7 @@ inline UINT64 GetRequiredIntermediateSize(
 //------------------------------------------------------------------------------------------------
 // All arrays must be populated (e.g. by calling GetCopyableFootprints)
 inline UINT64 UpdateSubresources(
-    _In_ ID3D12GraphicsCommandList* pCmdList,
+    _In_ ID3D12GraphicsCommandList1* pCmdList,
     _In_ ID3D12Resource* pDestinationResource,
     _In_ ID3D12Resource* pIntermediate,
     _In_range_(0,D3D12_REQ_SUBRESOURCES) UINT FirstSubresource,
@@ -2098,7 +2098,7 @@ inline UINT64 UpdateSubresources(
 //------------------------------------------------------------------------------------------------
 // All arrays must be populated (e.g. by calling GetCopyableFootprints)
 inline UINT64 UpdateSubresources(
-    _In_ ID3D12GraphicsCommandList* pCmdList,
+    _In_ ID3D12GraphicsCommandList1* pCmdList,
     _In_ ID3D12Resource* pDestinationResource,
     _In_ ID3D12Resource* pIntermediate,
     _In_range_(0,D3D12_REQ_SUBRESOURCES) UINT FirstSubresource,
@@ -2157,7 +2157,7 @@ inline UINT64 UpdateSubresources(
 //------------------------------------------------------------------------------------------------
 // Heap-allocating UpdateSubresources implementation
 inline UINT64 UpdateSubresources(
-    _In_ ID3D12GraphicsCommandList* pCmdList,
+    _In_ ID3D12GraphicsCommandList1* pCmdList,
     _In_ ID3D12Resource* pDestinationResource,
     _In_ ID3D12Resource* pIntermediate,
     UINT64 IntermediateOffset,
@@ -2181,8 +2181,8 @@ inline UINT64 UpdateSubresources(
     auto pNumRows = reinterpret_cast<UINT*>(pRowSizesInBytes + NumSubresources);
 
     auto Desc = pDestinationResource->GetDesc();
-    ID3D12Device* pDevice = nullptr;
-    pDestinationResource->GetDevice(IID_ID3D12Device, reinterpret_cast<void**>(&pDevice));
+    ID3D12Device4* pDevice = nullptr;
+    pDestinationResource->GetDevice(IID_ID3D12Device4, reinterpret_cast<void**>(&pDevice));
     pDevice->GetCopyableFootprints(&Desc, FirstSubresource, NumSubresources, IntermediateOffset, pLayouts, pNumRows, pRowSizesInBytes, &RequiredSize);
     pDevice->Release();
 
@@ -2194,7 +2194,7 @@ inline UINT64 UpdateSubresources(
 //------------------------------------------------------------------------------------------------
 // Heap-allocating UpdateSubresources implementation
 inline UINT64 UpdateSubresources(
-    _In_ ID3D12GraphicsCommandList* pCmdList,
+    _In_ ID3D12GraphicsCommandList1* pCmdList,
     _In_ ID3D12Resource* pDestinationResource,
     _In_ ID3D12Resource* pIntermediate,
     UINT64 IntermediateOffset,
@@ -2219,8 +2219,8 @@ inline UINT64 UpdateSubresources(
     auto pNumRows = reinterpret_cast<UINT*>(pRowSizesInBytes + NumSubresources);
 
     auto Desc = pDestinationResource->GetDesc();
-    ID3D12Device* pDevice = nullptr;
-    pDestinationResource->GetDevice(IID_ID3D12Device, reinterpret_cast<void**>(&pDevice));
+    ID3D12Device4* pDevice = nullptr;
+    pDestinationResource->GetDevice(IID_ID3D12Device4, reinterpret_cast<void**>(&pDevice));
     pDevice->GetCopyableFootprints(&Desc, FirstSubresource, NumSubresources, IntermediateOffset, pLayouts, pNumRows, pRowSizesInBytes, &RequiredSize);
     pDevice->Release();
 
@@ -2233,7 +2233,7 @@ inline UINT64 UpdateSubresources(
 // Stack-allocating UpdateSubresources implementation
 template <UINT MaxSubresources>
 inline UINT64 UpdateSubresources(
-    _In_ ID3D12GraphicsCommandList* pCmdList,
+    _In_ ID3D12GraphicsCommandList1* pCmdList,
     _In_ ID3D12Resource* pDestinationResource,
     _In_ ID3D12Resource* pIntermediate,
     UINT64 IntermediateOffset,
@@ -2247,8 +2247,8 @@ inline UINT64 UpdateSubresources(
     UINT64 RowSizesInBytes[MaxSubresources];
 
     auto Desc = pDestinationResource->GetDesc();
-    ID3D12Device* pDevice = nullptr;
-    pDestinationResource->GetDevice(IID_ID3D12Device, reinterpret_cast<void**>(&pDevice));
+    ID3D12Device4* pDevice = nullptr;
+    pDestinationResource->GetDevice(IID_ID3D12Device4, reinterpret_cast<void**>(&pDevice));
     pDevice->GetCopyableFootprints(&Desc, FirstSubresource, NumSubresources, IntermediateOffset, Layouts, NumRows, RowSizesInBytes, &RequiredSize);
     pDevice->Release();
 
@@ -2259,7 +2259,7 @@ inline UINT64 UpdateSubresources(
 // Stack-allocating UpdateSubresources implementation
 template <UINT MaxSubresources>
 inline UINT64 UpdateSubresources(
-    _In_ ID3D12GraphicsCommandList* pCmdList,
+    _In_ ID3D12GraphicsCommandList1* pCmdList,
     _In_ ID3D12Resource* pDestinationResource,
     _In_ ID3D12Resource* pIntermediate,
     UINT64 IntermediateOffset,
@@ -2274,8 +2274,8 @@ inline UINT64 UpdateSubresources(
     UINT64 RowSizesInBytes[MaxSubresources];
 
     auto Desc = pDestinationResource->GetDesc();
-    ID3D12Device* pDevice = nullptr;
-    pDestinationResource->GetDevice(IID_ID3D12Device, reinterpret_cast<void**>(&pDevice));
+    ID3D12Device4* pDevice = nullptr;
+    pDestinationResource->GetDevice(IID_ID3D12Device4, reinterpret_cast<void**>(&pDevice));
     pDevice->GetCopyableFootprints(&Desc, FirstSubresource, NumSubresources, IntermediateOffset, Layouts, NumRows, RowSizesInBytes, &RequiredSize);
     pDevice->Release();
 

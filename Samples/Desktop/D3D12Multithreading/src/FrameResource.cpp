@@ -13,7 +13,7 @@
 #include "FrameResource.h"
 #include "SquidRoom.h"
 
-FrameResource::FrameResource(ID3D12Device* pDevice, ID3D12PipelineState* pPso, ID3D12PipelineState* pShadowMapPso, ID3D12DescriptorHeap* pDsvHeap, ID3D12DescriptorHeap* pCbvSrvHeap, D3D12_VIEWPORT* pViewport, UINT frameResourceIndex) :
+FrameResource::FrameResource(ID3D12Device4* pDevice, ID3D12PipelineState* pPso, ID3D12PipelineState* pShadowMapPso, ID3D12DescriptorHeap* pDsvHeap, ID3D12DescriptorHeap* pCbvSrvHeap, D3D12_VIEWPORT* pViewport, UINT frameResourceIndex) :
     m_fenceValue(0),
     m_pipelineState(pPso),
     m_pipelineStateShadowMap(pShadowMapPso)
@@ -265,7 +265,7 @@ void FrameResource::Finish()
 
 // Sets up the descriptor tables for the worker command list to use 
 // resources provided by frame resource.
-void FrameResource::Bind(ID3D12GraphicsCommandList* pCommandList, BOOL scenePass, D3D12_CPU_DESCRIPTOR_HANDLE* pRtvHandle, D3D12_CPU_DESCRIPTOR_HANDLE* pDsvHandle)
+void FrameResource::Bind(ID3D12GraphicsCommandList1* pCommandList, BOOL scenePass, D3D12_CPU_DESCRIPTOR_HANDLE* pRtvHandle, D3D12_CPU_DESCRIPTOR_HANDLE* pDsvHandle)
 {
     if (scenePass)
     {

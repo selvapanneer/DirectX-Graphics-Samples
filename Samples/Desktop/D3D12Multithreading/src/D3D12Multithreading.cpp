@@ -12,6 +12,7 @@
 #include "stdafx.h"
 #include "D3D12Multithreading.h"
 #include "FrameResource.h"
+#include "ScreenGrab12.h"
 
 D3D12Multithreading* D3D12Multithreading::s_app = nullptr;
 
@@ -267,8 +268,12 @@ void D3D12Multithreading::LoadAssets()
     }
 
     // Create temporary command list for initial GPU setup.
-    ComPtr<ID3D12GraphicsCommandList> commandList;
-    ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), m_pipelineState.Get(), IID_PPV_ARGS(&commandList)));
+    ComPtr<ID3D12GraphicsCommandList1> commandList;
+    // ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), m_pipelineState.Get(), IID_PPV_ARGS(&commandList))); // Selva
+    ThrowIfFailed(m_device->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&commandList)));
+
+    m_commandAllocator->Reset();
+    ThrowIfFailed(commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()));
 
     // Create render target views (RTVs).
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -652,6 +657,9 @@ void D3D12Multithreading::LoadContexts()
 #endif
 }
 
+int folderNo = 0;
+int frameNo = 0;
+
 // Update frame-based values.
 void D3D12Multithreading::OnUpdate()
 {
@@ -696,6 +704,7 @@ void D3D12Multithreading::OnUpdate()
 
     if (m_keyboardInput.animate)
     {
+        frameChange = 0; // Lets not animate the lights for the first dataset
         for (int i = 0; i < NumLights; i++)
         {
             float direction = frameChange * pow(-1.0f, i);
@@ -713,6 +722,10 @@ void D3D12Multithreading::OnUpdate()
 
     m_pCurrentFrameResource->WriteConstantBuffers(&m_viewport, &m_camera, m_lightCameras, m_lights);
 }
+
+int c = 0;
+int x = -8;
+int y = -8;
 
 // Render the scene.
 void D3D12Multithreading::OnRender()
@@ -766,6 +779,43 @@ void D3D12Multithreading::OnRender()
             m_titleCount++;
             m_cpuTime += m_cpuTimer.GetElapsedSeconds() * 1000;
             m_cpuTimer.ResetElapsedTime();
+        }
+
+        wchar_t path[256];
+        wsprintfW(path, L"c:\\temp\\Data\\%d\\%d.dds", folderNo, frameNo);
+
+        if (frameNo == 360)
+        {
+            // Currently we are rotating 1 deg per frame, so quit after one full rotation
+            PostQuitMessage(0);
+        }
+        else
+        {
+            SaveDDSTextureToFile(
+                m_commandQueue.Get(),
+                m_renderTargets[m_frameIndex].Get(),
+                path,
+                D3D12_RESOURCE_STATE_COMMON,
+                D3D12_RESOURCE_STATE_COMMON);
+        }
+
+        folderNo++;
+
+        x++;
+
+        if (x > 7)
+        {
+            x = -8;
+            y++;
+        }
+
+        if (y > 7)
+        {
+            y = -8;
+            frameNo++;
+            folderNo = 0;
+
+            m_camera.RotateYaw(0.0174533);
         }
 
         // Present and update the frame index for the next frame.
@@ -958,8 +1008,16 @@ void D3D12Multithreading::WorkerThread(int threadIndex)
         WaitForSingleObject(m_workerBeginRenderFrame[threadIndex], INFINITE);
 
 #endif
-        ID3D12GraphicsCommandList* pShadowCommandList = m_pCurrentFrameResource->m_shadowCommandLists[threadIndex].Get();
-        ID3D12GraphicsCommandList* pSceneCommandList = m_pCurrentFrameResource->m_sceneCommandLists[threadIndex].Get();
+        ID3D12GraphicsCommandList1* pShadowCommandList = m_pCurrentFrameResource->m_shadowCommandLists[threadIndex].Get();
+        ID3D12GraphicsCommandList1* pSceneCommandList = m_pCurrentFrameResource->m_sceneCommandLists[threadIndex].Get();
+
+
+        D3D12_SAMPLE_POSITION samplePos;
+        samplePos.X = x;
+        samplePos.Y = y;
+        pShadowCommandList->SetSamplePositions(1, 1, &samplePos);
+        pSceneCommandList->SetSamplePositions(1, 1, &samplePos);
+
 
         //
         // Shadow pass
@@ -1030,7 +1088,7 @@ void D3D12Multithreading::WorkerThread(int threadIndex)
 #endif
 }
 
-void D3D12Multithreading::SetCommonPipelineState(ID3D12GraphicsCommandList* pCommandList)
+void D3D12Multithreading::SetCommonPipelineState(ID3D12GraphicsCommandList1* pCommandList)
 {
     pCommandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
